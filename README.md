@@ -2,7 +2,11 @@
 
 把多张照片拼成一张图，发朋友圈再也不用一张张发。橙白配色、中文界面、双击即用。
 
-> **下载**：请到右侧 **Releases** 下载最新的 `PicSnap.exe`，双击即可运行，无需安装任何环境。
+### ⬇️ 立即下载
+
+[![下载 PicSnap.exe](https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD%20PicSnap.exe-v1.0-%23FF8C1A?style=for-the-badge)](https://github.com/Grooshye/PicSnap/releases/download/v1.0/PicSnap.exe)
+
+> 双击即可运行，无需安装任何环境。
 
 ## 功能特性
 
