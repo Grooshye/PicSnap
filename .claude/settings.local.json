@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python \"C:/Users/32391/AppData/Local/Temp/picsnap_smoke.py\")",
+      "Bash(python \"D:/Program/MY PROGRAM/PicSnap_快捷拼图/main.py\")",
+      "Bash(python \"C:/Users/32391/AppData/Local/Temp/picsnap_smoke2.py\")",
+      "Bash(python _diag.py)",
+      "Bash(python _smoke3.py)",
+      "Bash(python main.py)",
+      "Bash(python -c ' *)",
+      "Bash(python _smoke4.py)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\32391\\AppData\\Local\\Temp"
+    ]
+  }
+}
