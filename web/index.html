@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#FF8C1A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="PicSnap">
+<title>PicSnap 快捷拼图</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">拼</span>
+    <span class="brand-text">PicSnap<small>快捷拼图</small></span>
+  </div>
+
+  <div class="tools" id="tools">
+    <button id="btn-import" class="primary">导入图片</button>
+
+    <span class="field">
+      <label>张数</label>
+      <select id="sel-count"></select>
+    </span>
+    <span class="field">
+      <label>模板</label>
+      <select id="sel-template"></select>
+    </span>
+    <span class="field">
+      <label>尺寸</label>
+      <select id="sel-size"></select>
+    </span>
+    <span class="field" id="custom-size" hidden>
+      <label>宽</label><input id="inp-w" type="number" min="100" max="8000" value="1080">
+      <label>高</label><input id="inp-h" type="number" min="100" max="8000" value="1440">
+    </span>
+
+    <button id="btn-dup" class="ghost" title="开启后同一张图片可重复放到多个格/分组，不再询问">允许重复</button>
+    <button id="btn-gap" class="ghost" title="勾选后图片无缝拼贴，不保留白色缝隙">无框线</button>
+
+    <button id="btn-export" class="primary">导出 / 复制</button>
+    <button id="btn-help" class="ghost icon" title="使用说明">?</button>
+  </div>
+</header>
+
+<main class="workspace">
+
+  <!-- 图片库 -->
+  <aside class="panel" id="panel-library" data-panel="library">
+    <div class="panel-head">
+      <span class="panel-title">图片库</span>
+      <select id="lib-filter" class="mini">
+        <option>全部</option>
+        <option>未分组</option>
+        <option>已分组</option>
+      </select>
+      <button id="lib-edit" class="ghost mini">编辑</button>
+      <span class="count" id="lib-count">0 张</span>
+    </div>
+    <div class="thumbs" id="lib-thumbs"></div>
+    <div class="empty-hint" id="lib-empty">
+      <b>还没有图片</b>
+      <span>点左上角「导入图片」，或把照片拖进来</span>
+    </div>
+  </aside>
+
+  <!-- 画布 -->
+  <section class="canvas-panel" id="panel-canvas" data-panel="canvas">
+    <div class="canvas-wrap" id="canvas-wrap">
+      <canvas id="collage"></canvas>
+    </div>
+    <div class="canvas-empty" id="canvas-empty" hidden>
+      <b>先新建一个分组</b>
+      <span>去「分组」标签点「＋ 新建分组」</span>
+    </div>
+  </section>
+
+  <!-- 分组 -->
+  <section class="panel groups-panel" id="panel-groups" data-panel="groups">
+    <div class="panel-head">
+      <span class="panel-title">分组</span>
+      <button id="grp-add" class="primary mini">＋ 新建分组</button>
+      <button id="grp-edit" class="ghost mini">编辑</button>
+    </div>
+    <div class="group-strip" id="group-strip"></div>
+  </section>
+
+</main>
+
+<nav class="tabbar" id="tabbar">
+  <button data-tab="library"><i>▤</i><span>图库</span></button>
+  <button data-tab="groups"><i>▦</i><span>分组</span></button>
+  <button data-tab="canvas" class="active"><i>◪</i><span>画布</span></button>
+</nav>
+
+<!-- 拖拽时的浮层缩略图 -->
+<img id="drag-ghost" alt="" hidden>
+
+<!-- 通用弹层容器 -->
+<div class="modal-backdrop" id="modal-backdrop" hidden>
+  <div class="modal" id="modal"></div>
+</div>
+
+<!-- 长按 / 右键 上下文菜单 -->
+<div class="ctxmenu" id="ctxmenu" hidden></div>
+
+<!-- 轻提示 -->
+<div class="toast" id="toast" hidden></div>
+
+<input type="file" id="file-input" accept="image/*" multiple hidden>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

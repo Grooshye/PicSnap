@@ -8,6 +8,14 @@
 
 > 双击即可运行，无需安装任何环境。
 
+### 🌐 网页版（手机 / 平板 / 电脑通用）
+
+打开就能用，不用安装：**https://grooshye.github.io/PicSnap/**
+
+- 安卓 / 苹果手机浏览器都能用；安卓可在菜单里选「添加到主屏幕」，像 App 一样打开
+- 电脑上同样可用，支持鼠标拖拽和 `Ctrl+V` 粘贴截图
+- 导出的图可直接保存、分享到微信
+
 ## 功能特性
 
 - **拖图即拼**：拖拽 / 复制粘贴 / 批量导入照片到图库
@@ -37,6 +45,9 @@ python main.py
 
 # 打包成单文件 exe（生成 dist/PicSnap.exe）
 python build.py
+
+# 网页版本地预览（浏览器打开 http://localhost:8000）
+python -m http.server 8000 --directory web
 ```
 
 ## 技术栈
@@ -46,13 +57,20 @@ Python 3.12 · PySide6 (Qt6) · Pillow · PyInstaller
 ## 目录结构
 
 ```
-main.py                 # 程序入口
+main.py                 # 桌面版程序入口
 app/
   main_window.py        # 主窗口
   theme.py              # 橙白主题样式
   models.py             # 数据模型（分组 / 格子）
   core/                 # 导入、模板、渲染引擎、拖拽、设置
   ui/                   # 图库 / 分组 / 画布 / 导出对话框
+
+web/                    # 网页版（手机 / 平板 / 电脑通用）
+  index.html
+  js/                   # 模型、渲染、画布、图库、分组、导出、模糊
+  css/app.css           # 橙白主题 + 响应式布局
+tests/selftest.html     # 网页版核心算法自测（18 项）
+
 docs/                   # 需求、技术方案、设计规范等
 dev-log/                # 开发日志
 ```

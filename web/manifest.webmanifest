@@ -1,0 +1,17 @@
+{
+  "name": "PicSnap 快捷拼图",
+  "short_name": "PicSnap",
+  "description": "把多张照片拼成一张图，发朋友圈再也不用一张张发。",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FFFDF9",
+  "theme_color": "#FF8C1A",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

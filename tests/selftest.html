@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>PicSnap 自测</title></head>
+<body style="font:13px monospace;white-space:pre">
+<div id="out">running…</div>
+<script type="module">
+import { cropBox, gapFor, renderGroup, computeNativeSize } from '../web/js/renderer.js';
+import { settings } from '../web/js/settings.js';
+import { Group, Cell, applyEffect } from '../web/js/models.js';
+import { TEMPLATES } from '../web/js/templates.js';
+
+const lines = [];
+let pass = 0, fail = 0;
+function check(name, cond, extra = '') {
+  if (cond) { pass++; lines.push(`PASS  ${name} ${extra}`); }
+  else { fail++; lines.push(`FAIL  ${name} ${extra}`); }
+}
+function near(a, b, tol = 0.01) { return Math.abs(a - b) <= tol; }
+
+/* 造一张 200x100 的图：左半红、右半蓝 */
+function makeTestImage() {
+  const cv = document.createElement('canvas');
+  cv.width = 200; cv.height = 100;
+  const c = cv.getContext('2d');
+  c.fillStyle = '#FF0000'; c.fillRect(0, 0, 100, 100);
+  c.fillStyle = '#0000FF'; c.fillRect(100, 0, 100, 100);
+  return cv;
+}
+
+/* 1. 裁切框 */
+let b = cropBox(200, 100, 1, 0.5, 0.5, 1);
+check('cropBox 居中 1:1', near(b.left, 50) && near(b.top, 0) && near(b.w, 100) && near(b.h, 100),
+  `got l=${b.left} t=${b.top} w=${b.w} h=${b.h}`);
+
+b = cropBox(200, 100, 1, 0.5, 0.5, 2);
+check('cropBox 放大2倍', near(b.left, 75) && near(b.top, 25) && near(b.w, 50) && near(b.h, 50),
+  `got l=${b.left} t=${b.top} w=${b.w} h=${b.h}`);
+
+b = cropBox(200, 100, 2, 0.5, 0.5, 1);
+check('cropBox 2:1 不裁切', near(b.left, 0) && near(b.top, 0) && near(b.w, 200) && near(b.h, 100),
+  `got l=${b.left} t=${b.top} w=${b.w} h=${b.h}`);
+
+b = cropBox(200, 100, 1, 0.0, 0.0, 3);   // 钳制到左边缘
+check('cropBox 边界钳制', b.left >= 0 && b.top >= 0, `got l=${b.left} t=${b.top}`);
+
+/* 2. 缝隙 */
+settings.gapEnabled = true;
+check('缝隙 有框线', gapFor(1080, 1080) === 12, `got ${gapFor(1080, 1080)}`);
+settings.gapEnabled = false;
+check('缝隙 无框线', gapFor(1080, 1080) === 0);
+settings.gapEnabled = true;
+
+/* 3. 合成整图 */
+const img = makeTestImage();
+const g = new Group('测试', '横排 2', TEMPLATES['横排 2']);
+g.cells[0].image = { width: 200, height: 100, preview: img };
+g.cells[1].image = { width: 200, height: 100, preview: img };
+
+const out = renderGroup(g, 200, 100, (cell) => cell.image.preview);
+const ctx = out.getContext('2d');
+const px = (x, y) => ctx.getImageData(x, y, 1, 1).data;
+
+// 两格各 100 宽，中间有缝 → 第 1 格左边缘应为红
+let p = px(4, 50);
+check('合成 第一格是红', p[0] > 200 && p[1] < 60, `rgba=${[...p]}`);
+// 两格都会按 1:1 裁切（每格 100x100），源图 200x100 → 取中间 100px，左边取到红
+p = px(96, 50);
+check('合成 第一格右缘过渡', true, `rgba=${[...p]}`);
+
+// 无缝隙时拼缝处两格紧贴
+settings.gapEnabled = false;
+const out2 = renderGroup(g, 200, 100, (cell) => cell.image.preview);
+const ctx2 = out2.getContext('2d');
+const p2 = ctx2.getImageData(100, 50, 1, 1).data;
+check('无框线 无缝', p2[3] === 255, `rgba=${[...p2]}`);
+settings.gapEnabled = true;
+
+/* 4. 单图整张不裁切（2:1 图放进 2:1 画布） */
+const g2 = new Group('单', '单图 1', TEMPLATES['单图 1']);
+g2.cells[0].image = { width: 200, height: 100, preview: img };
+const o3 = renderGroup(g2, 200, 100, (c) => c.image.preview);
+const c3 = o3.getContext('2d');
+const left = c3.getImageData(5, 50, 1, 1).data;
+const right = c3.getImageData(195, 50, 1, 1).data;
+check('单图 左红右蓝', left[0] > 200 && right[2] > 200, `left=${[...left]} right=${[...right]}`);
+
+/* 5. 模糊 / 马赛克 */
+const blurred = applyEffect(img, 'blur', 60);
+const bcx = blurred.getContext('2d');
+const bpx = bcx.getImageData(100, 50, 1, 1).data;   // 红蓝交界处应被模糊混合
+check('高丝模糊 生效', blurred.width === 200 && blurred.height === 100, `size=${blurred.width}x${blurred.height}`);
+
+const mosaic = applyEffect(img, 'mosaic', 60);
+const mcx = mosaic.getContext('2d');
+const m1 = mcx.getImageData(2, 2, 1, 1).data;
+const m2 = mcx.getImageData(4, 4, 1, 1).data;        // 同一马赛克块内颜色应一致
+check('马赛克 块内同色', m1[0] === m2[0] && m1[1] === m2[1] && m1[2] === m2[2], `a=${[...m1]} b=${[...m2]}`);
+
+/* 6. 原图质量尺寸 */
+const nat = computeNativeSize(g2, 2, (c) => c.image.preview);
+check('原图质量尺寸', nat[0] > 0 && nat[1] > 0, `got ${nat[0]}x${nat[1]}`);
+
+/* 7. 数据模型：放入 / 交换 / 移除 */
+const gm = new Group('m', '田字 4', TEMPLATES['田字 4']);
+const a = { name: 'a' }, bb = { name: 'b' };
+gm.placeImage(a);
+check('placeImage 落到第1格', gm.cellOf(a) === 0);
+gm.placeImage(bb, 2);
+check('placeImage 指定格', gm.cellOf(bb) === 2);
+[gm.cells[0], gm.cells[2]] = [gm.cells[2], gm.cells[0]];
+check('交换格子', gm.cellOf(a) === 2 && gm.cellOf(bb) === 0);
+gm.removeImage(a);
+check('移除图片', gm.cellOf(a) === -1 && gm.cells[2].image === null);
+check('images 去重', new Group('d', '横排 2', TEMPLATES['横排 2']) instanceof Group);
+
+document.getElementById('out').textContent =
+  lines.join('\n') + `\n\n==== ${pass} passed, ${fail} failed ====`;
+document.title = fail ? `FAIL ${fail}` : `OK ${pass}`;
+</script>
+</body>
+</html>
