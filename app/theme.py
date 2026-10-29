@@ -21,6 +21,27 @@ QSS = f"""
 QMainWindow {{
     background-color: {PANEL_BG};
 }}
+QDialog {{
+    background-color: {PANEL_BG};
+}}
+QMenu {{
+    background-color: {BG};
+    border: 1px solid {BORDER};
+    padding: 4px;
+}}
+QMenu::item {{
+    padding: 6px 22px;
+    border-radius: 4px;
+}}
+QMenu::item:selected {{
+    background-color: {BG_SOFT};
+    color: {ORANGE};
+}}
+QMenu::separator {{
+    height: 1px;
+    background: {BORDER};
+    margin: 4px 8px;
+}}
 QToolBar {{
     background-color: {BG};
     border: none;
@@ -112,6 +133,24 @@ QLineEdit {{
 }}
 QLineEdit:focus {{
     border-color: {ORANGE};
+}}
+QSlider::groove:horizontal {{
+    height: 6px;
+    background: {BORDER};
+    border-radius: 3px;
+}}
+QSlider::sub-page:horizontal {{
+    background: {ORANGE};
+    border-radius: 3px;
+}}
+QSlider::handle:horizontal {{
+    background: {ORANGE};
+    width: 16px;
+    margin: -6px 0;
+    border-radius: 8px;
+}}
+QSlider::handle:horizontal:hover {{
+    background: {ORANGE_HOVER};
 }}
 QWidget#GroupBox {{
     background-color: {BG};

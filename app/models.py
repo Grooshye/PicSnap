@@ -34,6 +34,8 @@ class Cell:
     cx: float = 0.5    # 可见区域中心 x（归一化 0~1）
     cy: float = 0.5    # 可见区域中心 y
     zoom: float = 1.0  # 缩放倍数（1 = 整图铺满，>1 放大）
+    blur_mode: str = "none"   # 处理方式：none / blur(高斯模糊) / mosaic(马赛克)
+    blur_amount: int = 30     # 处理强度 1~100
 
 
 @dataclass

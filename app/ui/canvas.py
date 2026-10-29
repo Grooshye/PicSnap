@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.core import dnd, settings
+from app.core.effects import apply_effect
 from app.core.renderer import crop_box
 from app.models import Group, ImageData
 from app.theme import ORANGE, ORANGE_HOVER
@@ -109,6 +110,8 @@ class GridCellItem(QGraphicsRectItem):
         self.canvas = canvas
         self.image: ImageData | None = None
         self._full_pm: QPixmap | None = None
+        self._base_pil: Image.Image | None = None
+        self._pm_key: tuple | None = None
         self._mode: str | None = None
         self._drag_start = None
         self._start_scene = None
@@ -127,20 +130,39 @@ class GridCellItem(QGraphicsRectItem):
     def set_image(self, img: ImageData | None) -> None:
         self.image = img
         self._full_pm = None
+        self._base_pil = None
+        self._pm_key = None
         self.update()
 
-    def _full_pixmap(self) -> QPixmap:
-        if self._full_pm is None:
+    def _base_image(self) -> Image.Image | None:
+        """整图（缩到 2048 以内），供绘制和模糊处理共用"""
+        if self._base_pil is None:
             if self.image is None:
-                self._full_pm = QPixmap()
-            else:
-                try:
-                    pil = self.image.full_image()
-                except Exception:
-                    self._full_pm = QPixmap()
-                else:
-                    pil.thumbnail((2048, 2048), Image.LANCZOS)
-                    self._full_pm = _pil_to_qpixmap(pil)
+                return None
+            try:
+                pil = self.image.full_image()
+            except Exception:
+                return None
+            # 必须复制：剪贴板图片直接返回内存里的那张，缩了会损坏原图
+            pil = pil.copy()
+            pil.thumbnail((2048, 2048), Image.LANCZOS)
+            self._base_pil = pil
+        return self._base_pil
+
+    def _full_pixmap(self) -> QPixmap:
+        """按当前处理参数返回显示用位图（同一参数只算一次）"""
+        cell = self.cell()
+        key = None if cell.blur_mode == "none" else (cell.blur_mode, cell.blur_amount)
+        if self._full_pm is not None and self._pm_key == key:
+            return self._full_pm
+        pil = self._base_image()
+        if pil is None:
+            self._full_pm = QPixmap()
+        else:
+            if key is not None:
+                pil = apply_effect(pil, cell.blur_mode, cell.blur_amount)
+            self._full_pm = _pil_to_qpixmap(pil)
+        self._pm_key = key
         return self._full_pm
 
     # ---- 绘制 ----
@@ -245,7 +267,21 @@ class GridCellItem(QGraphicsRectItem):
             act = QAction("编辑这张图", self.canvas)
             act.triggered.connect(lambda: self.canvas.set_edit_index(self.index))
         menu.addAction(act)
+
+        fx = menu.addAction("模糊处理…")
+        fx.triggered.connect(self._open_blur_dialog)
         menu.exec(event.screenPos())
+
+    def _open_blur_dialog(self) -> None:
+        from app.ui.blur_dialog import BlurDialog
+
+        BlurDialog(self.cell(), self._refresh_effect, self.canvas).exec()
+        self.canvas.group_modified.emit(self.canvas.group)
+
+    def _refresh_effect(self) -> None:
+        self._full_pm = None
+        self._pm_key = None
+        self.update()
 
     def mouseMoveEvent(self, event) -> None:
         pos = event.scenePos()

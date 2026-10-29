@@ -4,6 +4,7 @@ from __future__ import annotations
 from PIL import Image
 
 from app.core import settings
+from app.core.effects import apply_effect
 from app.models import Group
 
 GAP = 12.0      # 有框线时的缝隙（与画布一致，基于 1080 场景单位）
@@ -33,7 +34,9 @@ def crop_box(src_size: tuple[int, int], ratio: float, cx: float, cy: float, zoom
 
 
 def _cell_image(cell, src: Image.Image, cw: int, ch: int) -> Image.Image:
-    """把 cell 的图按格内参数裁切并缩放到 cw×ch"""
+    """把 cell 的图按格内参数裁切并缩放到 cw×ch（先处理再裁切，与网页版一致）"""
+    if getattr(cell, "blur_mode", "none") != "none":
+        src = apply_effect(src, cell.blur_mode, cell.blur_amount)
     box = crop_box(src.size, cw / ch, cell.cx, cell.cy, cell.zoom)
     return src.crop(box).resize((cw, ch), Image.LANCZOS)
 
